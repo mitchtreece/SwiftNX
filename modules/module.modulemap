@@ -1,0 +1,7 @@
+module libnx {
+    umbrella header "libnx/nx/include/switch.h"
+}
+
+module stdlib {
+    umbrella header "stdlib/stdlib.h"
+}
