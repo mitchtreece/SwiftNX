@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------------
 
 ifeq ($(strip $(DEVKITPRO)),)
-$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
+	$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
 endif
 
 TOPDIR ?= $(CURDIR)
@@ -41,26 +41,21 @@ EXEFS_SRC	:=	exefs_src
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH	:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE
+ARCH		:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE
+CFLAGS		:=	-g -Wall -O2 -ffunction-sections \
+				$(ARCH) $(DEFINES)
 
-CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
-			$(ARCH) $(DEFINES)
-
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__
-
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
-
-ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-
-LIBS	:= -lnx
+CFLAGS		+=	$(INCLUDE) -D__SWITCH__
+CXXFLAGS	:= 	$(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+ASFLAGS		:=	-g $(ARCH)
+LDFLAGS		 =	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+LIBS		:= 	-lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:= $(PORTLIBS) $(LIBNX)
-
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -71,9 +66,8 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 export TOPDIR	:=	$(CURDIR)
-
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+					$(foreach dir,$(DATA),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -97,18 +91,16 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
-export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTFILES:.swift=.o)
-export OFILES 		:=	$(OFILES_BIN) $(OFILES_SRC)
-export HFILES_BIN	:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
+export OFILES_BIN		:=	$(addsuffix .o,$(BINFILES))
+export OFILES_SRC		:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTFILES:.swift=.o)
+export OFILES 			:=	$(OFILES_BIN) $(OFILES_SRC)
+export HFILES_BIN		:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
+export INCLUDE			:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+							$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+							-I$(CURDIR)/$(BUILD)
 
-export INCLUDE		:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-						$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-						-I$(CURDIR)/$(BUILD)
-
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-
-export BUILD_EXEFS_SRC := $(TOPDIR)/$(EXEFS_SRC)
+export LIBPATHS			:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export BUILD_EXEFS_SRC 	:= $(TOPDIR)/$(EXEFS_SRC)
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
@@ -153,7 +145,6 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).pfs0 $(TARGET).nso $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 
-
 #---------------------------------------------------------------------------------
 else
 .PHONY:	all
@@ -163,21 +154,18 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-all	:	$(OUTPUT).pfs0 $(OUTPUT).nro
-
-$(OUTPUT).pfs0	:	$(OUTPUT).nso
-
-$(OUTPUT).nso	:	$(OUTPUT).elf
+all	: $(OUTPUT).pfs0 $(OUTPUT).nro
+$(OUTPUT).pfs0 : $(OUTPUT).nso
+$(OUTPUT).nso :	$(OUTPUT).elf
 
 ifeq ($(strip $(NO_NACP)),)
-$(OUTPUT).nro	:	$(OUTPUT).elf $(OUTPUT).nacp
+	$(OUTPUT).nro :	$(OUTPUT).elf $(OUTPUT).nacp
 else
-$(OUTPUT).nro	:	$(OUTPUT).elf
+	$(OUTPUT).nro :	$(OUTPUT).elf
 endif
 
-$(OUTPUT).elf	:	$(OFILES)
-
-$(OFILES_SRC)	: $(HFILES_BIN)
+$(OUTPUT).elf :	$(OFILES)
+$(OFILES_SRC) : $(HFILES_BIN)
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
@@ -188,7 +176,8 @@ $(OFILES_SRC)	: $(HFILES_BIN)
 	@$(bin2o)
 
 %.o : %.swift
-	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $< -o ${@:.o=}.ll
+#---------------------------------------------------------------------------------
+	swiftc -emit-ir -parse-as-library $< -o ${@:.o=}.ll
 	clang -target arm-none-eabihf -ffreestanding -Wno-override-module -o $@ -c ${@:.o=}.ll
 
 -include $(DEPENDS)
@@ -196,3 +185,6 @@ $(OFILES_SRC)	: $(HFILES_BIN)
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------
+
+# swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $< -o ${@:.o=}.ll
+# clang -target arm-none-eabihf -ffreestanding -Wno-override-module -o $@ -c ${@:.o=}.ll
