@@ -1,5 +1,5 @@
 module libnx {
-    umbrella header "libnx/libnx.h"
+    umbrella header "libnx/switch.h"
 }
 
 module stdlib {
