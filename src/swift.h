@@ -27,6 +27,9 @@ void _T0s6UInt32VN() {};
 void _T0SpMa() {};
 void _T0SvN() {};
 
+void swift_beginAccess() {};
+void swift_endAccess() {};
+
 // Classes
 // ../aarch64-none-elf/bin/ld: main.o: relocation R_AARCH64_ADR_PREL_PG_HI21 against symbol `_swift_allocObject' which may bind externally can not be used when making a shared object; recompile with -fPIC
 
@@ -38,3 +41,13 @@ void _T0BoWV() {};
 
 void OBJC_METACLASS_$_SwiftObject() {};
 void OBJC_CLASS_$_SwiftObject() {};
+
+// NXInput + enum
+
+void _T0S2ayxGx12arrayLiterald_tcfC() {};
+void _T0s8SequencePss9Equatable7ElementRpzrlE8containsSbAEF() {};
+void _swift_deallocObject() {};
+void _T0SaMa() {};
+void _T0SayxGs8SequencesWa() {};
+void _T0s9EquatableMp() {};
+void _T0s8HashableMp() {};
