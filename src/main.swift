@@ -7,11 +7,12 @@ func printf(_ format: StaticString, _ parameters: StaticString ...)
 @_silgen_name("swift_main")
 func swift_main() -> Int {
 
+    var console = PrintConsole()
+
     gfxInitDefault()
 
-    var top = PrintConsole()
-    consoleInit(&top)
-    consoleSelect(&top)
+    consoleInit(&console)
+    consoleSelect(&console)
 
     printf("Hello, world!")
 
