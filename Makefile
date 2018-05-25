@@ -41,14 +41,15 @@ EXEFS_SRC	:=	exefs_src
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH		:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE
+ARCH		:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE # Try -fPIC if relocation errors still happen
+
 CFLAGS		:=	-g -Wall -O2 -ffunction-sections \
 				$(ARCH) $(DEFINES)
 
 CFLAGS		+=	$(INCLUDE) -D__SWITCH__
 CXXFLAGS	:= 	$(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS		:=	-g $(ARCH)
-LDFLAGS		 =	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+LDFLAGS		 =	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyreloc
 LIBS		:= 	-lnx
 
 #---------------------------------------------------------------------------------
@@ -178,11 +179,11 @@ $(OFILES_SRC) : $(HFILES_BIN)
 %.o : %.swift
 #---------------------------------------------------------------------------------
 	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $< -o ${@:.o=}.ll
-	clang -target aarch64 -ffreestanding -Wno-override-module -o $@ -c ${@:.o=}.ll
+	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $@ -c ${@:.o=}.ll
 
 -include $(DEPENDS)
 
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------
-# -fpic = generate position independent code
+# -fpic = generate position independent code. (compiles, but causes memory issues when running)

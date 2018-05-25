@@ -26,3 +26,15 @@ void _T0SqMa() {};
 void _T0s6UInt32VN() {};
 void _T0SpMa() {};
 void _T0SvN() {};
+
+// Classes
+// ../aarch64-none-elf/bin/ld: main.o: relocation R_AARCH64_ADR_PREL_PG_HI21 against symbol `_swift_allocObject' which may bind externally can not be used when making a shared object; recompile with -fPIC
+
+void swift_deallocClassInstance() {};
+void _swift_allocObject() {};
+void _swift_getInitializedObjCClass() {};
+void _objc_empty_cache() {};
+void _T0BoWV() {};
+
+void OBJC_METACLASS_$_SwiftObject() {};
+void OBJC_CLASS_$_SwiftObject() {};

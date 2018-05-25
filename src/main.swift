@@ -4,7 +4,7 @@ import libnx
 @_silgen_name("printf")
 func printf(_ format: StaticString, _ parameters: StaticString ...)
 
-struct NXApplet {
+class NXApplet {
 
     static func main(_ loop: ()->()) {
 
@@ -16,7 +16,7 @@ struct NXApplet {
 
 }
 
-struct NXGfx {
+class NXGfx {
 
     func flush() {
         gfxFlushBuffers()
@@ -38,7 +38,7 @@ struct NXGfx {
     }
 
 }
-//
+
 // struct NXConsole {
 //
 //     private var _console: PrintConsole
