@@ -91,16 +91,16 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES_BIN		:=	$(addsuffix .o,$(BINFILES))
-export OFILES_SRC		:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTFILES:.swift=.o)
-export OFILES 			:=	$(OFILES_BIN) $(OFILES_SRC)
-export HFILES_BIN		:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
-export INCLUDE			:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+export OFILES_BIN		:= 	$(addsuffix .o,$(BINFILES))
+export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTFILES:.swift=.o)
+export OFILES 			:= 	$(OFILES_BIN) $(OFILES_SRC)
+export HFILES_BIN		:= 	$(addsuffix .h,$(subst .,_,$(BINFILES)))
+export INCLUDE			:= 	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 							$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 							-I$(CURDIR)/$(BUILD)
 
 export LIBPATHS			:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
-export BUILD_EXEFS_SRC 	:= $(TOPDIR)/$(EXEFS_SRC)
+export BUILD_EXEFS_SRC 	:= 	$(TOPDIR)/$(EXEFS_SRC)
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
@@ -149,7 +149,7 @@ clean:
 else
 .PHONY:	all
 
-DEPENDS	:=	$(OFILES:.o=.d)
+DEPENDS := $(OFILES:.o=.d)
 
 #---------------------------------------------------------------------------------
 # main targets
@@ -178,7 +178,7 @@ $(OFILES_SRC) : $(HFILES_BIN)
 %.o : %.swift
 #---------------------------------------------------------------------------------
 	swiftc -emit-ir -parse-as-library $< -o ${@:.o=}.ll
-	clang -target arm-none-eabihf -ffreestanding -Wno-override-module -o $@ -c ${@:.o=}.ll
+	clang -target aarch64 -ffreestanding -Wno-override-module -o $@ -c ${@:.o=}.ll
 
 -include $(DEPENDS)
 
