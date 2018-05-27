@@ -72,11 +72,14 @@ export VPATH	:=	$(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
-CFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
-CPPFILES		:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
-SFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
-# SWIFTFILES  	:=  $(filter-out main.swift, $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.swift))))
-BINFILES		:=	$(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
+CFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
+CPPFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
+SFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
+SWIFTAPP_NAME		:= 	app
+SWIFTAPP_SRC		:=  $(DEPSDIR)/$(SWIFTAPP_NAME).swift
+SWIFTAPP_LL			:= 	$(DEPSDIR)/$(SWIFTAPP_NAME).ll
+SWIFTAPP_O			:= 	$(DEPSDIR)/$(SWIFTAPP_NAME).o
+BINFILES			:=	$(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -93,7 +96,7 @@ endif
 #---------------------------------------------------------------------------------
 
 export OFILES_BIN		:= 	$(addsuffix .o, $(BINFILES))
-export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(TOPDIR/build/app.swift:=.o)
+export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 export OFILES 			:= 	$(OFILES_BIN) $(OFILES_SRC)
 export HFILES_BIN		:= 	$(addsuffix .h, $(subst .,_,$(BINFILES)))
 export INCLUDE			:= 	$(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
@@ -136,20 +139,20 @@ endif
 
 #---------------------------------------------------------------------------------
 
+$(SWIFTAPP_NAME).swift: # depend on build folder?
+	@echo =\> Creating $(SWIFTAPP_NAME).swift
+	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
+
+$(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
+	@echo =\> Creating $(SWIFTAPP_NAME).o
+	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
+	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
+
 all: $(BUILD)
 
-$(BUILD): app.o
+$(BUILD): $(SWIFTAPP_NAME).o
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-
-app.swift: # depend on build folder?
-	@echo =\> Creating app.swift
-	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(TOPDIR)/build/app.swift
-
-app.o : app.swift
-	@echo =\> Creating app.o
-	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $(TOPDIR)/build/app.swift -o $(TOPDIR)/build/app.ll
-	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $(TOPDIR)/build/app.o -c $(TOPDIR)/build/app.ll
 
 clean:
 	@echo cleaning...
