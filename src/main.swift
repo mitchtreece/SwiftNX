@@ -1,6 +1,8 @@
 import stdlib
 import libnx
 
+include "lib/NXTest.swift"
+
 @_silgen_name("printf")
 func printf(_ format: StaticString, _ parameters: StaticString ...)
 
@@ -46,6 +48,10 @@ class NXConsole {
 
 class NXGfx {
 
+    init() {
+        gfxInitDefault()
+    }
+
     func _flush() {
         gfxFlushBuffers()
     }
@@ -75,92 +81,140 @@ class NXGfx {
 
 }
 
-class NXInput {
+// class NXInput {
+//
+//     enum ControllerId: Int {
+//
+//         case p1 = 0
+//         case p2 = 1
+//         case p3 = 2
+//         case p4 = 3
+//         case p5 = 4
+//         case p6 = 5
+//         case p7 = 6
+//         case p8 = 7
+//         case handheld = 8
+//         case unknown = 9
+//         case p1_auto = 10
+//
+//     }
+//
+//     struct ControllerKey: OptionSet {
+//
+//         let rawValue: Int
+//
+//         // Need to figure out (power) button code
+//         static let plus = ControllerKey(rawValue: 1 << 10)
+//         static let minus = ControllerKey(rawValue: 1 << 11)
+//
+//     }
+//
+//     struct Info {
+//
+//         var keysDown: ControllerKey
+//         var keysUp: ControllerKey
+//         var keysHeld: ControllerKey
+//
+//     }
+//
+//     static func scan(controllerId: ControllerId = .p1_auto) -> Info {
+//
+//         // let _keyPlus = ControllerKey(rawValue: Int(KEY_PLUS.rawValue))
+//         // let _keyMinus = ControllerKey(rawValue: Int(KEY_MINUS.rawValue))
+//
+//         ///////////////////////
+//
+//         let r_cid: Int = controllerId.rawValue
+//         let cid = HidControllerID(rawValue: UInt32(r_cid))
+//
+//         let rawKeysDown: UInt64 = hidKeysDown(cid)
+//         let rawKeysUp: UInt64 = hidKeysUp(cid)
+//         let rawKeysHeld: UInt64 = hidKeysHeld(cid)
+//
+//         let keysDown = ControllerKey(rawValue: Int(rawKeysDown))
+//         let keysUp = ControllerKey(rawValue: Int(rawKeysUp))
+//         let keysHeld = ControllerKey(rawValue: Int(rawKeysHeld))
+//
+//         return Info(keysDown: keysDown, keysUp: keysUp, keysHeld: keysHeld)
+//
+//     }
+//
+// }
 
-    enum ControllerId: Int {
+// @_silgen_name("swift_main")
+// func swift_main() -> Int {
+//
+//     let gfx = NXGfx()
+//     let console = NXConsole()
+//
+//     console.print("Hello, world!")
+//
+//     let test = NXTest()
+//     test.test()
+//
+//     NXApplet.main {
+//
+//         let info = NXInput.scan()
+//
+//         if info.keysDown.contains(.plus) {
+//             console.print("You pressed the plus (+) key!")
+//         }
+//
+//         if info.keysUp.contains(.plus) {
+//             console.print("You released the plus (+) key!")
+//         }
+//
+//         gfx.clean()
+//
+//     }
+//
+//     return gfx.exit(0)
+//
+// }
 
-        case p1 = 0
-        case p2 = 1
-        case p3 = 2
-        case p4 = 3
-        case p5 = 4
-        case p6 = 5
-        case p7 = 6
-        case p8 = 7
-        case handheld = 8
-        case unknown = 9
-        case p1_auto = 10
+// @_silgen_name("swift_main")
+// func swift_main() -> Int {
+//
+//     let gfx = NXGfx()
+//     let console = NXConsole()
+//
+//     console.print("Hello, swift!")
+//
+//     NXApplet.main {
+//         gfx.clean()
+//     }
+//
+//     return gfx.exit(0)
+//
+// }
 
-    }
 
-    struct ControllerKey: OptionSet {
-
-        let rawValue: Int
-
-        static let plus = ControllerKey(rawValue: 1 << 10)
-        static let minus = ControllerKey(rawValue: 1 << 11)
-
-    }
-
-    struct Info {
-
-        var keysDown: ControllerKey
-        var keysUp: ControllerKey
-        var keysHeld: ControllerKey
-
-    }
-
-    static func scan(controllerId: ControllerId = .p1_auto) -> Info {
-
-        // let _keyPlus = ControllerKey(rawValue: Int(KEY_PLUS.rawValue))
-        // let _keyMinus = ControllerKey(rawValue: Int(KEY_MINUS.rawValue))
-
-        ///////////////////////
-
-        let r_cid: Int = controllerId.rawValue
-        let cid = HidControllerID(rawValue: UInt32(r_cid))
-
-        let rawKeysDown: UInt64 = hidKeysDown(cid)
-        let rawKeysUp: UInt64 = hidKeysUp(cid)
-        let rawKeysHeld: UInt64 = hidKeysHeld(cid)
-
-        let keysDown = ControllerKey(rawValue: Int(rawKeysDown))
-        let keysUp = ControllerKey(rawValue: Int(rawKeysUp))
-        let keysHeld = ControllerKey(rawValue: Int(rawKeysHeld))
-
-        return Info(keysDown: keysDown, keysUp: keysUp, keysHeld: keysHeld)
-
-    }
-
-}
-
+// Missing console + NXApplet code
 @_silgen_name("swift_main")
 func swift_main() -> Int {
 
-    let gfx = NXGfx()
+    gfxInitDefault()
+
+    let test = NXTest()
+    test.test()
+
     let console = NXConsole()
+    console.print("Hello, swift!")
 
-    console.print("Hello, world!")
+    while(appletMainLoop()) {
 
-    NXApplet.main {
-
-        let info = NXInput.scan()
-
-        if info.keysDown.contains(.plus) {
-            console.print("You pressed the plus (+) key!")
-        }
-
-        if info.keysUp.contains(.plus) {
-            console.print("You released the plus (+) key!")
-        }
-
-        gfx.clean()
+        gfxFlushBuffers()
+        gfxSwapBuffers()
+        gfxWaitForVsync()
 
     }
 
-    return gfx.exit(0)
+    gfxExit()
+    return 0
 
 }
+
+// MARK: Basic
 
 // @_silgen_name("swift_main")
 // func swift_main() -> Int {
@@ -170,7 +224,7 @@ func swift_main() -> Int {
 //     var console = PrintConsole()
 //     consoleInit(&console)
 //     consoleSelect(&console)
-//     printf("Hello, world!")
+//     printf("Hello, swift!")
 //
 //     while(appletMainLoop()) {
 //

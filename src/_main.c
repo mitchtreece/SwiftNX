@@ -1,4 +1,4 @@
-#include "swift.h"
+#include "lib/swift.h"
 
 int main(int argc, char **argv) {
 	return swift_main();

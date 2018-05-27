@@ -30,12 +30,12 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - icon.jpg
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
-BUILD		:=	build
-SOURCES		:=	src
-DATA		:=	data
-INCLUDES	:=	include
-EXEFS_SRC	:=	exefs_src
+TARGET			:=	$(notdir $(CURDIR))
+BUILD			:=	build
+SOURCES			:=	src
+DATA			:=	data
+INCLUDES		:=	include
+EXEFS_SRC		:=	exefs_src
 #ROMFS	:=	romfs
 
 #---------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ CFLAGS		+=	$(INCLUDE) -D__SWITCH__
 CXXFLAGS	:= 	$(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS		:=	-g $(ARCH)
 LDFLAGS		 =	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyreloc
-LIBS		:= 	-lnx
+LIBS		:=  -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -67,16 +67,16 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 export TOPDIR	:=	$(CURDIR)
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+export VPATH	:=	$(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
+					$(foreach dir, $(DATA), $(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-SWIFTFILES  :=  $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.swift)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+CFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
+CPPFILES		:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
+SFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
+# SWIFTFILES  	:=  $(filter-out main.swift, $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.swift))))
+BINFILES		:=	$(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -92,23 +92,23 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES_BIN		:= 	$(addsuffix .o,$(BINFILES))
-export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTFILES:.swift=.o)
+export OFILES_BIN		:= 	$(addsuffix .o, $(BINFILES))
+export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(TOPDIR/build/app.swift:=.o)
 export OFILES 			:= 	$(OFILES_BIN) $(OFILES_SRC)
-export HFILES_BIN		:= 	$(addsuffix .h,$(subst .,_,$(BINFILES)))
-export INCLUDE			:= 	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-							$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+export HFILES_BIN		:= 	$(addsuffix .h, $(subst .,_,$(BINFILES)))
+export INCLUDE			:= 	$(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
+							$(foreach dir, $(LIBDIRS), -I$(dir)/include) \
 							-I$(CURDIR)/$(BUILD)
 
-export LIBPATHS			:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export LIBPATHS			:=	$(foreach dir, $(LIBDIRS), -L$(dir)/lib)
 export BUILD_EXEFS_SRC 	:= 	$(TOPDIR)/$(EXEFS_SRC)
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
-	ifneq (,$(findstring $(TARGET).jpg,$(icons)))
+	ifneq (,$(findstring $(TARGET).jpg, $(icons)))
 		export APP_ICON := $(TOPDIR)/$(TARGET).jpg
 	else
-		ifneq (,$(findstring icon.jpg,$(icons)))
+		ifneq (,$(findstring icon.jpg, $(icons)))
 			export APP_ICON := $(TOPDIR)/icon.jpg
 		endif
 	endif
@@ -135,18 +135,26 @@ endif
 .PHONY: $(BUILD) clean all
 
 #---------------------------------------------------------------------------------
+
 all: $(BUILD)
 
-$(BUILD):
+$(BUILD): app.o
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
-#---------------------------------------------------------------------------------
+app.swift: # depend on build folder?
+	@echo =\> Creating app.swift
+	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(TOPDIR)/build/app.swift
+
+app.o : app.swift
+	@echo =\> Creating app.o
+	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $(TOPDIR)/build/app.swift -o $(TOPDIR)/build/app.ll
+	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $(TOPDIR)/build/app.o -c $(TOPDIR)/build/app.ll
+
 clean:
-	@echo clean ...
+	@echo cleaning...
 	@rm -fr $(BUILD) $(TARGET).pfs0 $(TARGET).nso $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 
-#---------------------------------------------------------------------------------
 else
 .PHONY:	all
 
@@ -155,6 +163,7 @@ DEPENDS := $(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
+
 all	: $(OUTPUT).pfs0 $(OUTPUT).nro
 $(OUTPUT).pfs0 : $(OUTPUT).nso
 $(OUTPUT).nso :	$(OUTPUT).elf
@@ -168,18 +177,9 @@ endif
 $(OUTPUT).elf :	$(OFILES)
 $(OFILES_SRC) : $(HFILES_BIN)
 
-#---------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
-#---------------------------------------------------------------------------------
 %.bin.o	%_bin.h : %.bin
-#---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)
-
-%.o : %.swift
-#---------------------------------------------------------------------------------
-	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $< -o ${@:.o=}.ll
-	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $@ -c ${@:.o=}.ll
 
 -include $(DEPENDS)
 

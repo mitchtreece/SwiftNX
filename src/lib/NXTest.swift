@@ -1,0 +1,7 @@
+class NXTest {
+
+    func test() {
+
+    }
+
+}
