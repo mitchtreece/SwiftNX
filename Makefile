@@ -30,13 +30,20 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - icon.jpg
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
+
+APP_TITLE	:= SwiftNX
+APP_AUTHOR 	:= mitchtreece
+APP_VERSION	:= 1.0.0
+
+#---------------------------------------------------------------------------------
+
 TARGET			:=	$(notdir $(CURDIR))
 BUILD			:=	build
 SOURCES			:=	src
 DATA			:=	data
 INCLUDES		:=	include
 EXEFS_SRC		:=	exefs_src
-#ROMFS	:=	romfs
+ROMFS			:=	romfs
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -75,6 +82,7 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 CFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
 CPPFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
 SFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
+SWIFT_VERSION		:=	4
 SWIFTAPP_NAME		:= 	app
 SWIFTAPP_SRC		:=  $(DEPSDIR)/$(SWIFTAPP_NAME).swift
 SWIFTAPP_LL			:= 	$(DEPSDIR)/$(SWIFTAPP_NAME).ll
@@ -149,7 +157,7 @@ app: $(SWIFTAPP_NAME).o
 
 $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
 	@echo =\> Creating $(SWIFTAPP_NAME).o
-	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
+	swiftc -swift-version $(SWIFT_VERSION) -emit-ir -parse-as-library -static-stdlib -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
 	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
 
 $(SWIFTAPP_NAME).swift: $(BUILD)

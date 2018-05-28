@@ -14,8 +14,28 @@ import libnx
 
 include "lib/SwiftNX.swift"
 
-// // MARK: Applet + console
-//
+// MARK: GFX
+
+@_silgen_name("swift_main")
+func swift_main() -> Int {
+
+    let gfx = NXGfx()
+
+    var console = PrintConsole()
+    consoleInit(&console)
+    consoleSelect(&console)
+    printf("Hello, swift!")
+
+    while(appletMainLoop()) {
+        gfx.clean()
+    }
+
+    return gfx.exit(0)
+
+}
+
+// MARK: Applet + console
+
 // @_silgen_name("swift_main")
 // func swift_main() -> Int {
 //
@@ -36,9 +56,9 @@ include "lib/SwiftNX.swift"
 //     return 0
 //
 // }
-//
-// // MARK: Console only
-//
+
+// MARK: Console only - NOT WORKING (no console text is drawn)
+
 // @_silgen_name("swift_main")
 // func swift_main() -> Int {
 //
@@ -60,32 +80,32 @@ include "lib/SwiftNX.swift"
 //
 // }
 
-// MARK: Applet only
+// MARK: Applet only - WORKING (console text looks weird)
 
-@_silgen_name("swift_main")
-func swift_main() -> Int {
+// @_silgen_name("swift_main")
+// func swift_main() -> Int {
+//
+//     gfxInitDefault()
+//
+//     var console = PrintConsole()
+//     consoleInit(&console)
+//     consoleSelect(&console)
+//     printf("Hello, swift!")
+//
+//     NXApplet.main {
+//
+//         gfxFlushBuffers()
+//         gfxSwapBuffers()
+//         gfxWaitForVsync()
+//
+//     }
+//
+//     gfxExit()
+//     return 0
+//
+// }
 
-    gfxInitDefault()
-
-    var console = PrintConsole()
-    consoleInit(&console)
-    consoleSelect(&console)
-    printf("Hello, swift!")
-
-    NXApplet.main {
-
-        gfxFlushBuffers()
-        gfxSwapBuffers()
-        gfxWaitForVsync()
-
-    }
-
-    gfxExit()
-    return 0
-
-}
-
-// MARK: Template
+// MARK: Template - WORKING
 
 // @_silgen_name("swift_main")
 // func swift_main() -> Int {
