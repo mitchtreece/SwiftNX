@@ -62,7 +62,7 @@ LIBDIRS	:= $(PORTLIBS) $(LIBNX)
 # no real need to edit anything past this point unless you need to add additional
 # rules for different file extensions
 #---------------------------------------------------------------------------------
-ifneq ($(BUILD),$(notdir $(CURDIR)))
+ifneq ($(BUILD), $(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
@@ -139,24 +139,30 @@ endif
 
 #---------------------------------------------------------------------------------
 
-$(SWIFTAPP_NAME).swift: # depend on build folder?
-	@echo =\> Creating $(SWIFTAPP_NAME).swift
-	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
+all: app
+
+app: $(SWIFTAPP_NAME).o
+	@echo =\> Making
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
 	@echo =\> Creating $(SWIFTAPP_NAME).o
 	swiftc -emit-ir -parse-as-library -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
 	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
 
-all: $(BUILD)
+$(SWIFTAPP_NAME).swift: $(BUILD)
+	@echo =\> Creating $(SWIFTAPP_NAME).swift
+	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
 
-$(BUILD): $(SWIFTAPP_NAME).o
+$(BUILD): # Create build dir & trigger
+	@echo =\> Creating $(BUILD) directory
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 clean:
-	@echo cleaning...
+	@echo =\> Cleaning
 	@rm -fr $(BUILD) $(TARGET).pfs0 $(TARGET).nso $(TARGET).nro $(TARGET).nacp $(TARGET).elf
+
+#---------------------------------------------------------------------------------
 
 else
 .PHONY:	all
