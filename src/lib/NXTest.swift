@@ -1,7 +1,0 @@
-class NXTest {
-
-    func test() {
-
-    }
-
-}

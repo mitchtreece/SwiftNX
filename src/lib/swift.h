@@ -1,3 +1,14 @@
+
+/**
+ * @Author: Mitch Treece <mitchtreece>
+ * @Date:   05-25-2018
+ * @Email:  mitchtreece@me.com
+ * @Project: SwiftNX
+ * @Filename: swift.h
+ * @Last modified by:   mitchtreece
+ * @Last modified time: 05-28-2018
+ */
+
 int swift_main();
 
 // Base

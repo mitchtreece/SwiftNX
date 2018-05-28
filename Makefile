@@ -96,7 +96,7 @@ endif
 #---------------------------------------------------------------------------------
 
 export OFILES_BIN		:= 	$(addsuffix .o, $(BINFILES))
-export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTAPP_SRC:.swift=.o)
 export OFILES 			:= 	$(OFILES_BIN) $(OFILES_SRC)
 export HFILES_BIN		:= 	$(addsuffix .h, $(subst .,_,$(BINFILES)))
 export INCLUDE			:= 	$(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
@@ -138,6 +138,8 @@ endif
 .PHONY: $(BUILD) clean all
 
 #---------------------------------------------------------------------------------
+# Swift & build targets
+#---------------------------------------------------------------------------------
 
 all: app
 
@@ -154,9 +156,12 @@ $(SWIFTAPP_NAME).swift: $(BUILD)
 	@echo =\> Creating $(SWIFTAPP_NAME).swift
 	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
 
-$(BUILD): # Create build dir & trigger
+$(BUILD):
 	@echo =\> Creating $(BUILD) directory
 	@[ -d $@ ] || mkdir -p $@
+
+# @$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $@
+# @$(NM) -CSn $@ > $(notdir $*.lst)
 
 clean:
 	@echo =\> Cleaning
@@ -190,8 +195,8 @@ $(OFILES_SRC) : $(HFILES_BIN)
 	@echo $(notdir $<)
 	@$(bin2o)
 
+#---------------------------------------------------------------------------------------
 -include $(DEPENDS)
-
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------

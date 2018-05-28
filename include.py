@@ -56,6 +56,9 @@ def includify(file):
                 name = match.group(1) # => "source.swift"
                 path = absoluteFilePath(name) # => "../src/source.swift" (based on this scripts path)
 
+                # print(name)
+                # print(path)
+
                 if name not in includedFileNames:
                     output += includify(path)
 
