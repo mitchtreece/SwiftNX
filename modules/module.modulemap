@@ -1,7 +1,8 @@
 module stdlib {
     umbrella header "stdlib/stdlib.h"
+    export *
 }
 
 module libnx {
-    umbrella header "libnx/include/switch.h"
+    header "/opt/devkitpro/libnx/include/switch.h"
 }

@@ -109,7 +109,7 @@ export OFILES 			:= 	$(OFILES_BIN) $(OFILES_SRC)
 export HFILES_BIN		:= 	$(addsuffix .h, $(subst .,_,$(BINFILES)))
 export INCLUDE			:= 	$(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
 							$(foreach dir, $(LIBDIRS), -I$(dir)/include) \
-							-I$(CURDIR)/$(BUILD)
+							-I$(CURDIR)/$(BUILD) \
 
 export LIBPATHS			:=	$(foreach dir, $(LIBDIRS), -L$(dir)/lib)
 export BUILD_EXEFS_SRC 	:= 	$(TOPDIR)/$(EXEFS_SRC)
@@ -157,7 +157,7 @@ app: $(SWIFTAPP_NAME).o
 
 $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
 	@echo =\> Creating $(SWIFTAPP_NAME).o
-	swiftc -swift-version $(SWIFT_VERSION) -emit-ir -parse-as-library -static-stdlib -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
+	swiftc -swift-version $(SWIFT_VERSION) -emit-ir -parse-as-library -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
 	clang -target aarch64 -fpic -ffreestanding -Wno-override-module -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
 
 $(SWIFTAPP_NAME).swift: $(BUILD)
