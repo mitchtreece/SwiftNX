@@ -12,7 +12,7 @@
 class NXGfx {
 
     init() {
-        gfxInitDefault()
+        // gfxInitDefault()
     }
 
     func _flush() {
@@ -35,11 +35,8 @@ class NXGfx {
 
     }
 
-    func exit(_ code: Int) -> Int {
-
+    func exit() {
         gfxExit()
-        return code
-
     }
 
 }

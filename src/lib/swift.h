@@ -101,3 +101,12 @@ void _T0s25ExpressibleByArrayLiteralMp() {};
 
 // void _T0s15UnsignedIntegerPss010FixedWidthB0RzrlExqd__cs06BinaryB0Rd(long arg1, float arg2, const int arg3) {};
 // void _T0s13SignedIntegerPss010FixedWidthB0RzrlExqd__cs06BinaryB0Rd(long arg1, float arg2, const int arg3) {};
+
+// NXUIPoint + NXUIRect
+
+void _T0s5Int32V2leoiSbAB_ABtFZ() {};
+void _T0s5Int32V2geoiSbAB_ABtFZ() {};
+
+// NXUIColor
+
+void _T0s5UInt8VN() {};

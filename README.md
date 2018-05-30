@@ -1,34 +1,35 @@
-# SwiftNX
-Swift homebrew running on the Nintendo Switch!
+![SwiftNX](assets/logo.png)
 
-## Currently Working
+![Version](https://img.shields.io/badge/Version-WIP-blue.svg?style=for-the-badge)
+![Swift](https://img.shields.io/badge/Swift-4-orange.svg?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Platform-NX-red.svg?style=for-the-badge)
+
+## Overview
+Swift homebrew framework for the Nintendo Switch!
+
+### *What Currently Works*
 - Swift entry point: `swift_main() -> Int`
 - Specific [libnx](https://github.com/switchbrew/libnx) C function calls (**applet, gfx, console**)
 
-## Project Goals
-- Importable swiftnx homebrew module
+### Project Goals
+- Importable `swiftnx` Swift module
 - Wrapper classes over common [libnx](https://github.com/switchbrew/libnx) API's
-    - NXDevice
-    - NXApplet
-    - NXConsole
-    - NXGfx
-    - NXInput
-    - etc..
-- [SDL2](https://www.libsdl.org/index.php) wrapper classes
-    - SDLWindow
-    - SDLRenderer
-    - SDLRect
-    - etc..
+    - `NXDevice`
+    - `NXApplet`
+    - `NXConsole`
+    - `NXGfx`
+    - `NXInput`
+    - **etc..**
 - UI framework built on [SDL2](https://www.libsdl.org/index.php)
-    - NXUIWindow
-    - NXUIView
-    - NXUIRect
-    - NXUILabel
-    - NXUIButton
-    - NXUIAlert
-    - etc..
+    - `NXUIWindow`
+    - `NXUIView`
+    - `NXUIRect`
+    - `NXUILabel`
+    - `NXUIButton`
+    - `NXUIAlert`
+    - **etc..**
 
-### Example
+#### Example
 
 ```swift
 @_silgen_name("swift_main")
