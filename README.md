@@ -1,4 +1,4 @@
-![SwiftNX](assets/logo.jpg)
+![SwiftNX](assets/logo.png)
 
 ![Version](https://img.shields.io/badge/Version-WIP-blue.svg?style=for-the-badge)
 ![Swift](https://img.shields.io/badge/Swift-4-orange.svg?style=for-the-badge)
