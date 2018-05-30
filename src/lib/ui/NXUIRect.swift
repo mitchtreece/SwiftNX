@@ -3,7 +3,7 @@ class NXUIRect {
 
     // TODO: Equatable?
 
-    private var _rect: SDL_Rect
+    private(set) var _rect: SDL_Rect
 
     var x: Int32 {
         return _rect.x
@@ -19,6 +19,10 @@ class NXUIRect {
 
     var height: Int32 {
         return _rect.h
+    }
+
+    static var zero: NXUIRect {
+        return NXUIRect(x: 0, y: 0, width: 0, height: 0)
     }
 
     init(x: Int32, y: Int32, width: Int32, height: Int32) {

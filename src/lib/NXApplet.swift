@@ -11,7 +11,17 @@
 
 class NXApplet {
 
-    static func main(_ loop: ()->()) {
+    static var current = NXApplet()
+
+    // private(set) var window: NXUIWindow
+    // NXUISurface?
+    // NXUIRenderer?
+
+    private init() {
+        SDL.init()
+    }
+
+    func main(_ loop: ()->()) {
 
         while(appletMainLoop()) {
             loop()

@@ -24,6 +24,7 @@ include "lib/NXGfx.swift"
 
 // MARK: UI
 
+include "lib/ui/SDL.swift"
 include "lib/ui/NXUIPoint.swift"
 include "lib/ui/NXUIRect.swift"
 include "lib/ui/NXUIColor.swift"
