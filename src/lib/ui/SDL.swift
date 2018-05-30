@@ -1,7 +1,7 @@
 
 class SDL {
 
-    static func `init`() {
+    static func start() {
 
         SDL_Init(SDL_INIT_EVERYTHING)
         // SDL_SetRenderDrawBlendMode(SDL_RENDERER, SDL_BLENDMODE_BLEND);
@@ -9,7 +9,14 @@ class SDL {
 
     }
 
-    static func createWindowAndRenderer(width: Int32, height: Int32) -> (SDL_Window, SDL_Renderer) {
+    static func createWindowAndRenderer(width: Int32, height: Int32) -> (window: SDL_Window, renderer: SDL_Renderer) {
+
+        var window: SDL_Window
+        var renderer: SDL_Renderer
+
+        SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer)
+
+        return (window, renderer)
 
     }
 

@@ -13,19 +13,41 @@ class NXApplet {
 
     static var current = NXApplet()
 
+    // private(set) var renderer: NXUIRenderer
     // private(set) var window: NXUIWindow
-    // NXUISurface?
-    // NXUIRenderer?
+    // private(set) var surface: NXUISurface
 
     private init() {
-        SDL.init()
+
+        // SDL.start()
+        //
+        // let out = SDL.createWindowAndRenderer(width: 1280, height: 720)
+        // self.window = NXUIWindow(window: out.window)
+        // self.renderer = NXUIRenderer(renderer: out.renderer)
+        // self.surface = self.window.surface
+
     }
 
-    func main(_ loop: ()->()) {
+    func mainLoop(_ loop: ()->()) {
 
         while(appletMainLoop()) {
             loop()
         }
+
+    }
+
+    func exit(_ code: Int) -> Int {
+
+        // SDL
+
+        // renderer.destory()
+        // surface.free()
+        // window.destory()
+        // SDL.quit()
+
+        // Return code
+
+        return code
 
     }
 

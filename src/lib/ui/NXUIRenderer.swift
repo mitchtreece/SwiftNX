@@ -13,7 +13,11 @@ class NXUIRenderer {
         self._renderer = renderer
     }
 
-    func draw(view: NXUIView) {
+    func present() {
+        SDL_RenderPresent(_renderer)
+    }
+
+    func draw(_ view: NXUIView) {
 
         let oldColor = drawColor
         drawColor = view.color

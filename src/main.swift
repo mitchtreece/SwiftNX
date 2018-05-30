@@ -11,7 +11,7 @@
 
 import stdlib
 import libnx
-import sdl2
+// import sdl2
 
 include "lib/SwiftNX.swift"
 
@@ -20,7 +20,13 @@ include "lib/SwiftNX.swift"
 @_silgen_name("swift_main")
 func swift_main() -> Int {
 
-    let gfx = NXGfx()
+    // let app = NXApplet.current
+    // let gfx = NXGfx()
+
+    gfxInitDefault()
+
+    socketInitializeDefault()
+    nxlinkStdio()
 
     var console = PrintConsole()
     consoleInit(&console)
@@ -28,12 +34,48 @@ func swift_main() -> Int {
     printf("Hello, swift!")
 
     while(appletMainLoop()) {
-        gfx.clean()
+
+        // gfx.clean()
+
+        gfxFlushBuffers()
+        gfxSwapBuffers()
+        gfxWaitForVsync()
+
     }
 
-    return gfx.exit(0)
+    // gfx.exit()
+
+    socketExit()
+    gfxExit()
+    // return app.exit(0)
+    return 0
 
 }
+
+// MARK: UI (SDL)
+
+// @_silgen_name("swift_main")
+// func swift_main() -> Int {
+//
+//     let app = NXApplet.current
+//
+//     app.mainLoop {
+//
+//         app.renderer.clear()
+//
+//         let view = NXUIView(frame: NXUIRect(x: 0, y: 0, width: 100, height: 100))
+//         view.color = NXUIColor.red
+//         app.renderer.draw(view)
+//
+//         // if flag {
+//         //     return app.exit(0)
+//         // }
+//
+//     }
+//
+//     app.renderer.present()
+//
+// }
 
 // MARK: Applet + console
 
