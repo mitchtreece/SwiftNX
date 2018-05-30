@@ -15,6 +15,8 @@ func printf(_ format: StaticString, _ parameters: StaticString ...)
 // TODO: Fix include.py paths so they're relative to the current include file's path
 // i.e. "NXApplet.swift" from this directory should resolve to: ../path/to/project/src/lib/NXApplet.swift"
 
+// MARK: Core
+
 include "lib/NXApplet.swift"
 include "lib/NXConsole.swift"
 include "lib/NXGfx.swift"
