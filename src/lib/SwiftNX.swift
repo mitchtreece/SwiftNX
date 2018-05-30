@@ -19,3 +19,9 @@ include "lib/NXApplet.swift"
 include "lib/NXConsole.swift"
 include "lib/NXGfx.swift"
 // include "lib/NXInput.swift"
+
+// MARK: UI
+
+include "lib/ui/NXUIPoint.swift"
+include "lib/ui/NXUIRect.swift"
+include "lib/ui/NXUIColor.swift"
