@@ -5,3 +5,9 @@ module libnx {
 module stdlib {
     umbrella header "stdlib/stdlib.h"
 }
+
+module sdl2 {
+    header "/opt/devkitpro/portlibs/switch/include/SDL2/SDL.h"
+    header "/opt/devkitpro/portlibs/switch/include/SDL2/SDL_image.h"
+    header "/opt/devkitpro/portlibs/switch/include/SDL2/SDL_ttf.h"
+}

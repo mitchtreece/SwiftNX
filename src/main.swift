@@ -11,6 +11,7 @@
 
 import stdlib
 import libnx
+import sdl2
 
 include "lib/SwiftNX.swift"
 
