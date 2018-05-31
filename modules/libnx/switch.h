@@ -1,7 +1,0 @@
-#include "switch/types.h"
-#include "switch/result.h"
-#include "switch/gfx/gfx.h"
-#include "switch/runtime/nxlink.h"
-#include "switch/runtime/devices/console.h"
-#include "switch/services/applet.h"
-#include "switch/services/hid.h"

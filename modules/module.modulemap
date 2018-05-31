@@ -1,9 +1,5 @@
 module libnx {
-    umbrella header "libnx/switch.h"
-}
-
-module stdlib {
-    umbrella header "stdlib/stdlib.h"
+    header "/opt/devkitpro/libnx/include/switch.h"
 }
 
 module sdl2 {

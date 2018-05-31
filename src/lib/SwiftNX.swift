@@ -17,15 +17,17 @@ func printf(_ format: StaticString, _ parameters: StaticString ...)
 
 // MARK: Core
 
-include "lib/NXApplet.swift"
-include "lib/NXConsole.swift"
-include "lib/NXGfx.swift"
-// include "lib/NXInput.swift"
+include "lib/core/NXApplet.swift"
+include "lib/core/NXConsole.swift"
+include "lib/core/NXGfx.swift"
+// include "lib/core/NXInput.swift"
+
+// MARK: SDL
+
+// include "lib/sdl/SDL.swift"
 
 // MARK: UI
 
-// include "lib/ui/SDL.swift"
-//
 // include "lib/ui/NXUIRenderer.swift"
 // include "lib/ui/NXUIWindow.swift"
 // include "lib/ui/NXUISurface.swift"
