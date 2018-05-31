@@ -9,7 +9,6 @@
  * @Last modified time: 05-28-2018
  */
 
-import stdlib
 import libnx
 // import sdl2
 
@@ -24,9 +23,6 @@ func swift_main() -> Int {
     // let gfx = NXGfx()
 
     gfxInitDefault()
-
-    socketInitializeDefault()
-    nxlinkStdio()
 
     var console = PrintConsole()
     consoleInit(&console)
@@ -44,10 +40,9 @@ func swift_main() -> Int {
     }
 
     // gfx.exit()
-
-    socketExit()
-    gfxExit()
     // return app.exit(0)
+
+    gfxExit()
     return 0
 
 }
