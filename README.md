@@ -13,6 +13,7 @@ Swift homebrew framework for the Nintendo Switch!
 
 ### Project Goals
 - Importable `swiftnx` Swift module
+- nxlink support (nro loading without fumbling with SD cards)
 - Wrapper classes over common [libnx](https://github.com/switchbrew/libnx) API's
     - `NXDevice`
     - `NXApplet`
