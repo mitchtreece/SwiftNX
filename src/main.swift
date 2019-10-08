@@ -12,6 +12,9 @@
 import libnx
 // import swiftnx
 
+// @_silgen_name("printf")
+// func printf(_ format: StaticString, _ parameters: StaticString ...)
+
 // MARK: Console (raw)
 
 @_silgen_name("swift_main")

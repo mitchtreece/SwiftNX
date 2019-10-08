@@ -15,7 +15,6 @@ include $(DEVKITPRO)/libnx/switch_rules
 # SOURCES is a list of directories containing source code
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
-# EXEFS_SRC is the optional input directory containing data copied into exefs, if anything this normally should only contain "main.npdm".
 # ROMFS is the directory containing data to be added to RomFS, relative to the Makefile (Optional)
 #
 # NO_ICON: if set to anything, do not use icon.
@@ -29,44 +28,56 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - <Project name>.jpg
 #     - icon.jpg
 #     - <libnx folder>/default_icon.jpg
+#
+# CONFIG_JSON is the filename of the NPDM config file (.json), relative to the project folder.
+#   If not set, it attempts to use one of the following (in this order):
+#     - <Project name>.json
+#     - config.json
+#   If a JSON file is provided or autodetected, an ExeFS PFS0 (.nsp) is built instead
+#   of a homebrew executable (.nro). This is intended to be used for sysmodules.
+#   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 
-APP_TITLE	:= SwiftNX
-APP_AUTHOR 	:= mitchtreece
-APP_VERSION	:= 1.0.0
+APP_TITLE 		:= SwiftNX
+APP_AUTHOR 		:= mitchtreece
+APP_VERSION 	:= 1.0.0
 
 #---------------------------------------------------------------------------------
 
-TARGET			:=	$(notdir $(CURDIR))
-BUILD			:=	build
-SOURCES			:=	src
-DATA			:=	data
-INCLUDES		:=	include
-EXEFS_SRC		:=	exefs_src
-ROMFS			:=	romfs
+TARGET			:= $(notdir $(CURDIR))
+BUILD				:= build
+SOURCES			:= src
+DATA				:= data
+INCLUDES		:= include
+# ROMFS				:= romfs
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH		:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE
+CPU	 			:= cortex-a57
+ARCH_BASE := armv8
+ARCH 			:= -march=$(ARCH_BASE)-a+crc+crypto -mtune=$(CPU) -mtp=soft -fPIE
 
-CFLAGS		:=	-g -Wall -O2 -ffunction-sections \
-				`sdl2-config --cflags` `freetype-config --cflags` \
-				$(ARCH) $(DEFINES)
+CFLAGS :=	-g -Wall -O2 -ffunction-sections \
+					$(ARCH) $(DEFINES)
+					# `sdl2-config --cflags` `freetype-config --cflags` \ #
 
-				# -isysroot $(DEVKITPRO)/devkitA64/aarch64-none-elf \ #
-				# -I/$(DEVKITPRO)/devkitA64/aarch64-none-elf/include \ #
+CFLAGS 		+= $(INCLUDE) -D__SWITCH__
+CXXFLAGS 	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
-CFLAGS		+=	$(INCLUDE) -D__SWITCH__
-CXXFLAGS	:= 	$(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+# -std=gnu++11
 
-ASFLAGS		:=	-g $(ARCH)
-LDFLAGS		 =	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyrelo
+ASFLAGS 	:= -g $(ARCH)
+LDFLAGS		=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS		:=	-lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_mixer \
-				-lfreetype -lz -lbz2 -lpng16 -lm \
-				-lpng -ljpeg -lvorbisidec -logg -lmpg123 -lmodplug -lstdc++ \
-				-lnx
+# -Wl,-z,nocopyrelo
+
+LIBS := -lnx
+
+# LIBS 	:=	-lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_mixer \
+# 			 		-lfreetype -lz -lbz2 -lpng16 -lm \
+# 					-lpng -ljpeg -lvorbisidec -logg -lmpg123 -lmodplug -lstdc++ \
+# 					-lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -81,54 +92,67 @@ LIBDIRS	:= $(PORTLIBS) $(LIBNX)
 ifneq ($(BUILD), $(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-export TOPDIR	:=	$(CURDIR)
-export VPATH	:=	$(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
-					$(foreach dir, $(DATA), $(CURDIR)/$(dir))
+export OUTPUT 	:= $(CURDIR)/$(TARGET)
+export TOPDIR		:= $(CURDIR)
+export VPATH		:= $(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
+									 $(foreach dir, $(DATA), $(CURDIR)/$(dir))
 
-export DEPSDIR	:=	$(CURDIR)/$(BUILD)
+export DEPSDIR 	:= $(CURDIR)/$(BUILD)
 
-CFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
-CPPFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
-SFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
-SWIFT_VERSION		:=	5
-SWIFTAPP_NAME		:= 	applet
-SWIFTAPP_SRC		:=  $(DEPSDIR)/$(SWIFTAPP_NAME).swift
-SWIFTAPP_LL			:= 	$(DEPSDIR)/$(SWIFTAPP_NAME).ll
-SWIFTAPP_O			:= 	$(DEPSDIR)/$(SWIFTAPP_NAME).o
-BINFILES			:=	$(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
+SWIFT_VERSION		:= 5
+SWIFTAPP_NAME		:= applet
+SWIFTAPP_SRC		:= $(DEPSDIR)/$(SWIFTAPP_NAME).swift
+SWIFTAPP_LL			:= $(DEPSDIR)/$(SWIFTAPP_NAME).ll
+SWIFTAPP_O			:= $(DEPSDIR)/$(SWIFTAPP_NAME).o
+CFILES					:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
+CPPFILES				:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
+SFILES					:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
+BINFILES				:= $(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
 #---------------------------------------------------------------------------------
 ifeq ($(strip $(CPPFILES)),)
 #---------------------------------------------------------------------------------
-	export LD	:=	$(CC)
+	export LD	:= $(CC)
 #---------------------------------------------------------------------------------
 else
 #---------------------------------------------------------------------------------
-	export LD	:=	$(CXX)
+	export LD	:= $(CXX)
 #---------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES_BIN		:= 	$(addsuffix .o, $(BINFILES))
-export OFILES_SRC		:= 	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTAPP_SRC:.swift=.o)
-export OFILES 			:= 	$(OFILES_BIN) $(OFILES_SRC)
-export HFILES_BIN		:= 	$(addsuffix .h, $(subst .,_,$(BINFILES)))
-export INCLUDE			:= 	$(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
-							$(foreach dir, $(LIBDIRS), -I$(dir)/include) \
-							-I$(CURDIR)/$(BUILD)
+export OFILES_BIN				:= $(addsuffix .o, $(BINFILES))
+export OFILES_SRC				:= $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTAPP_SRC:.swift=.o)
+export OFILES 					:= $(OFILES_BIN) $(OFILES_SRC)
+export HFILES_BIN				:= $(addsuffix .h, $(subst .,_,$(BINFILES)))
+export INCLUDE					:= $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
+											 		 $(foreach dir, $(LIBDIRS), -I$(dir)/include) \
+											 	 	 -I$(CURDIR)/$(BUILD)
 
-export LIBPATHS			:=	$(foreach dir, $(LIBDIRS), -L$(dir)/lib)
-export BUILD_EXEFS_SRC 	:= 	$(TOPDIR)/$(EXEFS_SRC)
+export LIBPATHS					:= $(foreach dir, $(LIBDIRS), -L$(dir)/lib)
+export BUILD_EXEFS_SRC 	:= $(TOPDIR)/$(EXEFS_SRC)
+
+ifeq ($(strip $(CONFIG_JSON)),)
+	jsons := $(wildcard *.json)
+	ifneq (,$(findstring $(TARGET).json,$(jsons)))
+		export APP_JSON := $(TOPDIR)/$(TARGET).json
+	else
+		ifneq (,$(findstring config.json,$(jsons)))
+			export APP_JSON := $(TOPDIR)/config.json
+		endif
+	endif
+else
+	export APP_JSON := $(TOPDIR)/$(CONFIG_JSON)
+endif
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
-	ifneq (,$(findstring $(TARGET).jpg, $(icons)))
+	ifneq (,$(findstring $(TARGET).jpg,$(icons)))
 		export APP_ICON := $(TOPDIR)/$(TARGET).jpg
 	else
-		ifneq (,$(findstring icon.jpg, $(icons)))
+		ifneq (,$(findstring icon.jpg,$(icons)))
 			export APP_ICON := $(TOPDIR)/icon.jpg
 		endif
 	endif
@@ -167,19 +191,25 @@ main: $(SWIFTAPP_NAME).o
 $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
 	@echo =\> Creating $(SWIFTAPP_NAME).o
 	swiftc -swift-version $(SWIFT_VERSION) -emit-ir -parse-as-library -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
-	clang --target=aarch64-arm-none-eabi -fpic -ffreestanding -Wno-override-module -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
+	clang -v --target=$(ARCH_BASE) -mcpu=$(CPU) -ffreestanding -Wno-override-module -fpic -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
 
 $(SWIFTAPP_NAME).swift: $(BUILD)
 	@echo =\> Creating $(SWIFTAPP_NAME).swift
 	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
 
 $(BUILD):
+	# @echo =\> Setting environment variables
+	# env CCC_OVERRIDE_OPTIONS="#x-fmodules s/-fmodules-cache-path.*//"
 	@echo =\> Creating $(BUILD) directory
 	@[ -d $@ ] || mkdir -p $@
 
 clean:
 	@echo =\> Cleaning
-	@rm -fr $(BUILD) $(TARGET).pfs0 $(TARGET).nso $(TARGET).nro $(TARGET).nacp $(TARGET).elf
+ifeq ($(strip $(APP_JSON)),)
+	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
+else
+	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
+endif
 
 #---------------------------------------------------------------------------------
 
@@ -192,32 +222,42 @@ DEPENDS := $(OFILES:.o=.d)
 # main targets
 #---------------------------------------------------------------------------------
 
-all	: $(OUTPUT).pfs0 $(OUTPUT).nro
-$(OUTPUT).pfs0 : $(OUTPUT).nso
-$(OUTPUT).nso :	$(OUTPUT).elf
+ifeq ($(strip $(APP_JSON)),)
+
+all	:	$(OUTPUT).nro
 
 ifeq ($(strip $(NO_NACP)),)
-	$(OUTPUT).nro :	$(OUTPUT).elf $(OUTPUT).nacp
+$(OUTPUT).nro	:	$(OUTPUT).elf $(OUTPUT).nacp
 else
-	$(OUTPUT).nro :	$(OUTPUT).elf
+$(OUTPUT).nro	:	$(OUTPUT).elf
 endif
 
-$(OUTPUT).elf :	$(OFILES)
-$(OFILES_SRC) : $(HFILES_BIN)
+else
 
-%.bin.o	%_bin.h : %.bin
+all	:	$(OUTPUT).nsp
+$(OUTPUT).nsp	:	$(OUTPUT).nso $(OUTPUT).npdm
+$(OUTPUT).nso	:	$(OUTPUT).elf
+
+endif
+
+$(OUTPUT).elf	:	$(OFILES)
+$(OFILES_SRC)	: $(HFILES_BIN)
+
+#---------------------------------------------------------------------------------
+# you need a rule like this for each extension you use as binary data
+#---------------------------------------------------------------------------------
+
+%.bin.o	%_bin.h :	%.bin
 	@echo $(notdir $<)
 	@$(bin2o)
 
-%.nxfnt.o :	%.nxfnt
-	@echo $(notdir $<)
-	@$(bin2o)
-
-#---------------------------------------------------------------------------------------
 -include $(DEPENDS)
+
 #---------------------------------------------------------------------------------------
+
 endif
-#---------------------------------------------------------------------------------------
 
 # NOTES --------------------------------------------------------------------------------
+# clang target: aarch64-arm-none-eabi (arch-vendor-os-env)
+# --target=$(ARCH_BASE)-none-eabi
 # -fpic = generate position independent code. (compiles, but causes memory issues when running)
