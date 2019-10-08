@@ -54,10 +54,14 @@ CFLAGS		:=	-g -Wall -O2 -ffunction-sections \
 				`sdl2-config --cflags` `freetype-config --cflags` \
 				$(ARCH) $(DEFINES)
 
+				# -isysroot $(DEVKITPRO)/devkitA64/aarch64-none-elf \ #
+				# -I/$(DEVKITPRO)/devkitA64/aarch64-none-elf/include \ #
+
 CFLAGS		+=	$(INCLUDE) -D__SWITCH__
 CXXFLAGS	:= 	$(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+
 ASFLAGS		:=	-g $(ARCH)
-LDFLAGS		 =	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyreloc
+LDFLAGS		 =	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyrelo
 
 LIBS		:=	-lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_mixer \
 				-lfreetype -lz -lbz2 -lpng16 -lm \
@@ -87,7 +91,7 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 CFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
 CPPFILES			:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
 SFILES				:=	$(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
-SWIFT_VERSION		:=	4
+SWIFT_VERSION		:=	5
 SWIFTAPP_NAME		:= 	applet
 SWIFTAPP_SRC		:=  $(DEPSDIR)/$(SWIFTAPP_NAME).swift
 SWIFTAPP_LL			:= 	$(DEPSDIR)/$(SWIFTAPP_NAME).ll
@@ -154,25 +158,6 @@ endif
 # Swift & build targets
 #---------------------------------------------------------------------------------
 
-# This program built for i386-apple-darwin11.3.0
-# Reading makefiles...
-# Updating goal targets....
-#  File `all' does not exist.
-#    File `/Users/mitchtreece/Developer/switch/projects/SwiftNX/SwiftNX.pfs0' does not exist.
-#      File `/Users/mitchtreece/Developer/switch/projects/SwiftNX/SwiftNX.nso' does not exist.
-#        File `/Users/mitchtreece/Developer/switch/projects/SwiftNX/SwiftNX.elf' does not exist.
-#          File `_main.o' does not exist.
-#         Must remake target `_main.o'.
-# _main.c
-# aarch64-none-elf-gcc -MMD -MP -MF /Users/mitchtreece/Developer/switch/projects/SwiftNX/build/_main.d -g -Wall -O2 -ffunction-sections `sdl2-config --cflags` `freetype-config --cflags` -march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE    -I/Users/mitchtreece/Developer/switch/projects/SwiftNX/include  -I/opt/devkitpro/portlibs/switch/include  -I/opt/devkitpro/libnx/include -I/Users/mitchtreece/Developer/switch/projects/SwiftNX/build -D__SWITCH__ -c /Users/mitchtreece/Developer/switch/projects/SwiftNX/src/_main.c -o _main.o
-#         Successfully remade target file `_main.o'.
-#       Must remake target `/Users/mitchtreece/Developer/switch/projects/SwiftNX/SwiftNX.elf'.
-# linking SwiftNX.elf
-# aarch64-none-elf-gcc: fatal error: /opt/devkitpro/libnx/switch.specs: attempt to rename spec 'link' to already defined spec 'old_link'
-# compilation terminated.
-# make[1]: *** [/Users/mitchtreece/Developer/switch/projects/SwiftNX/SwiftNX.elf] Error 1
-# make: *** [app] Error 2
-
 all: main
 
 main: $(SWIFTAPP_NAME).o
@@ -191,16 +176,6 @@ $(SWIFTAPP_NAME).swift: $(BUILD)
 $(BUILD):
 	@echo =\> Creating $(BUILD) directory
 	@[ -d $@ ] || mkdir -p $@
-
-# From libnx/switch_rules:
-# %.elf:
-# 	@echo linking $(notdir $@)
-# 	@$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) -o $@
-# 	@$(NM) -CSn $@ > $(notdir $*.lst)
-#
-#	==
-#	$(LD) -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyreloc $(OFILES) $(LIBPATHS) $(LIBS) -o $@
-#
 
 clean:
 	@echo =\> Cleaning
@@ -243,4 +218,6 @@ $(OFILES_SRC) : $(HFILES_BIN)
 #---------------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------------
+
+# NOTES --------------------------------------------------------------------------------
 # -fpic = generate position independent code. (compiles, but causes memory issues when running)

@@ -9,48 +9,62 @@
  * @Last modified time: 05-28-2018
  */
 
-import stdlib
 import libnx
-// import sdl2
+// import swiftnx
 
-include "lib/SwiftNX.swift"
-
-// MARK: GFX
+// MARK: Console (raw)
 
 @_silgen_name("swift_main")
 func swift_main() -> Int {
 
-    // let app = NXApplet.current
-    // let gfx = NXGfx()
-
-    gfxInitDefault()
-
-    socketInitializeDefault()
-    nxlinkStdio()
-
-    var console = PrintConsole()
-    consoleInit(&console)
-    consoleSelect(&console)
-    printf("Hello, swift!")
+    consoleInit(nil)
+    print("Hello, Swift!")
 
     while(appletMainLoop()) {
-
-        // gfx.clean()
-
-        gfxFlushBuffers()
-        gfxSwapBuffers()
-        gfxWaitForVsync()
-
+        consoleUpdate(nil)
     }
 
-    // gfx.exit()
-
-    socketExit()
-    gfxExit()
-    // return app.exit(0)
+    consoleExit(nil)
     return 0
 
 }
+
+// MARK: GFX
+
+// @_silgen_name("swift_main")
+// func swift_main() -> Int {
+//
+//     // let app = NXApplet.current
+//     // let gfx = NXGfx()
+//
+//     gfxInitDefault()
+//
+//     socketInitializeDefault()
+//     nxlinkStdio()
+//
+//     var console = PrintConsole()
+//     consoleInit(&console)
+//     consoleSelect(&console)
+//     printf("Hello, swift!")
+//
+//     while(appletMainLoop()) {
+//
+//         // gfx.clean()
+//
+//         gfxFlushBuffers()
+//         gfxSwapBuffers()
+//         gfxWaitForVsync()
+//
+//     }
+//
+//     // gfx.exit()
+//
+//     socketExit()
+//     gfxExit()
+//     // return app.exit(0)
+//     return 0
+//
+// }
 
 // MARK: UI (SDL)
 
