@@ -1,4 +1,3 @@
-
 /**
  * @Author: Mitch Treece <mitchtreece>
  * @Date:   05-24-2018
@@ -9,28 +8,36 @@
  * @Last modified time: 05-28-2018
  */
 
-import libnx
+// import libnx
 // import swiftnx
 
 // @_silgen_name("printf")
 // func printf(_ format: StaticString, _ parameters: StaticString ...)
 
-// MARK: Console (raw)
-
 @_silgen_name("swift_main")
 func swift_main() -> Int {
 
-    consoleInit(nil)
-    print("Hello, Swift!")
-
-    while(appletMainLoop()) {
-        consoleUpdate(nil)
-    }
-
-    consoleExit(nil)
+    print("Hello, world!")
     return 0
 
 }
+
+// MARK: Console (raw)
+
+// @_silgen_name("swift_main")
+// func swift_main() -> Int {
+//
+//     consoleInit(nil)
+//     print("Hello, Swift!")
+//
+//     while(appletMainLoop()) {
+//         consoleUpdate(nil)
+//     }
+//
+//     consoleExit(nil)
+//     return 0
+//
+// }
 
 // MARK: GFX
 

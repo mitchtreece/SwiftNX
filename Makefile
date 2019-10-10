@@ -45,36 +45,44 @@ APP_VERSION 	:= 1.0.0
 #---------------------------------------------------------------------------------
 
 TARGET			:= $(notdir $(CURDIR))
-BUILD				:= build
+BUILD			:= build
 SOURCES			:= src
-DATA				:= data
+DATA			:= data
 INCLUDES		:= include
-# ROMFS				:= romfs
+# ROMFS			 := romfs
+
+#---------------------------------------------------------------------------------
+# swift environment
+#---------------------------------------------------------------------------------
+
+SWIFT_SDK		:= /Library/Developer/SDKs/arm64-5.1.0-RELEASE.sdk
+SWIFT_TOOLCHAIN := /Library/Developer/Toolchains/arm64-5.1.0-RELEASE.xctoolchain
+SWIFTC 			:= $(SWIFT_TOOLCHAIN)/usr/bin/swiftc
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
+
 CPU	 			:= cortex-a57
-ARCH_BASE := armv8
-ARCH 			:= -march=$(ARCH_BASE)-a+crc+crypto -mtune=$(CPU) -mtp=soft -fPIE
+ARCH_BASE 		:= armv8
+ARCH_SUB		:= a
+ARCH 			:= -march=$(ARCH_BASE)-$(ARCH_SUB)+crc+crypto -mtune=$(CPU) -mtp=soft -fPIE
 
-CFLAGS :=	-g -Wall -O2 -ffunction-sections \
-					$(ARCH) $(DEFINES)
-					# `sdl2-config --cflags` `freetype-config --cflags` \ #
+CFLAGS 			:= -g -Wall -O2 -ffunction-sections \
+				   $(ARCH) $(DEFINES)
 
-CFLAGS 		+= $(INCLUDE) -D__SWITCH__
-CXXFLAGS 	:= $(CFLAGS) -fno-rtti -fno-exceptions
+				   # `sdl2-config --cflags` `freetype-config --cflags` \ #
 
-# -std=gnu++11
+CFLAGS 			+= $(INCLUDE) -D__SWITCH__
+CXXFLAGS 		:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
-ASFLAGS 	:= -g $(ARCH)
-LDFLAGS		=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+ASFLAGS 		:= -g $(ARCH)
+LDFLAGS		 	 = -v -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) \
+				   -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyrelo
 
-# -Wl,-z,nocopyrelo
+LIBS 			:= -lnx
 
-LIBS := -lnx
-
-# LIBS 	:=	-lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_mixer \
+# LIBS 			 :=	-lSDL2 -lSDL2_gfx -lSDL2_ttf -lSDL2_mixer \
 # 			 		-lfreetype -lz -lbz2 -lpng16 -lm \
 # 					-lpng -ljpeg -lvorbisidec -logg -lmpg123 -lmodplug -lstdc++ \
 # 					-lnx
@@ -83,7 +91,8 @@ LIBS := -lnx
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(LIBNX)
+
+LIBDIRS			:= $(PORTLIBS) $(LIBNX)
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -93,21 +102,21 @@ ifneq ($(BUILD), $(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
 export OUTPUT 	:= $(CURDIR)/$(TARGET)
-export TOPDIR		:= $(CURDIR)
-export VPATH		:= $(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
-									 $(foreach dir, $(DATA), $(CURDIR)/$(dir))
+export TOPDIR	:= $(CURDIR)
+export VPATH	:= $(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
+				   $(foreach dir, $(DATA), $(CURDIR)/$(dir))
 
 export DEPSDIR 	:= $(CURDIR)/$(BUILD)
 
-SWIFT_VERSION		:= 5
-SWIFTAPP_NAME		:= applet
-SWIFTAPP_SRC		:= $(DEPSDIR)/$(SWIFTAPP_NAME).swift
-SWIFTAPP_LL			:= $(DEPSDIR)/$(SWIFTAPP_NAME).ll
-SWIFTAPP_O			:= $(DEPSDIR)/$(SWIFTAPP_NAME).o
-CFILES					:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
-CPPFILES				:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
-SFILES					:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
-BINFILES				:= $(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
+SWIFT_VERSION	:= 5
+SWIFTAPP_NAME	:= applet
+SWIFTAPP_SRC	:= $(DEPSDIR)/$(SWIFTAPP_NAME).swift
+SWIFTAPP_LL		:= $(DEPSDIR)/$(SWIFTAPP_NAME).ll
+SWIFTAPP_O		:= $(DEPSDIR)/$(SWIFTAPP_NAME).o
+CFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
+CPPFILES		:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
+SFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
+BINFILES		:= $(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -123,15 +132,15 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES_BIN				:= $(addsuffix .o, $(BINFILES))
-export OFILES_SRC				:= $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTAPP_SRC:.swift=.o)
-export OFILES 					:= $(OFILES_BIN) $(OFILES_SRC)
-export HFILES_BIN				:= $(addsuffix .h, $(subst .,_,$(BINFILES)))
-export INCLUDE					:= $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
-											 		 $(foreach dir, $(LIBDIRS), -I$(dir)/include) \
-											 	 	 -I$(CURDIR)/$(BUILD)
+export OFILES_BIN 		:= $(addsuffix .o, $(BINFILES))
+export OFILES_SRC		:= $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTAPP_SRC:.swift=.o)
+export OFILES 			:= $(OFILES_BIN) $(OFILES_SRC)
+export HFILES_BIN		:= $(addsuffix .h, $(subst .,_,$(BINFILES)))
+export INCLUDE			:= $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
+						   $(foreach dir, $(LIBDIRS), -I$(dir)/include) \
+						   -I$(CURDIR)/$(BUILD)
 
-export LIBPATHS					:= $(foreach dir, $(LIBDIRS), -L$(dir)/lib)
+export LIBPATHS			:= $(foreach dir, $(LIBDIRS), -L$(dir)/lib)
 export BUILD_EXEFS_SRC 	:= $(TOPDIR)/$(EXEFS_SRC)
 
 ifeq ($(strip $(CONFIG_JSON)),)
@@ -184,24 +193,30 @@ endif
 
 all: main
 
-main: $(SWIFTAPP_NAME).o
-	@echo =\> Making
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-
-$(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
-	@echo =\> Creating $(SWIFTAPP_NAME).o
-	swiftc -swift-version $(SWIFT_VERSION) -emit-ir -parse-as-library -I $(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
-	clang -v --target=$(ARCH_BASE) -mcpu=$(CPU) -ffreestanding -Wno-override-module -fpic -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
+$(BUILD):
+	@echo =\> Creating $(BUILD) directory
+	@[ -d $@ ] || mkdir -p $@
 
 $(SWIFTAPP_NAME).swift: $(BUILD)
 	@echo =\> Creating $(SWIFTAPP_NAME).swift
 	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
 
-$(BUILD):
-	# @echo =\> Setting environment variables
-	# env CCC_OVERRIDE_OPTIONS="#x-fmodules s/-fmodules-cache-path.*//"
-	@echo =\> Creating $(BUILD) directory
-	@[ -d $@ ] || mkdir -p $@
+$(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
+	@echo =\> Creating $(SWIFTAPP_NAME).o
+	$(SWIFTC) -v -sdk $(SWIFT_SDK) -swift-version $(SWIFT_VERSION) -target aarch64-unknown-linux \
+	-emit-object -parse-as-library -static-stdlib \
+	$(SWIFTAPP_SRC) -o $(DEPSDIR)/$(SWIFTAPP_NAME).o
+
+# swiftc -v -swift-version $(SWIFT_VERSION) -emit-ir -parse-as-library -I$(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(DEPSDIR)/$(SWIFTAPP_NAME).o
+# -target aarch64-unknown-linux
+
+# /usr/local/opt/llvm/bin/clang -v --target=$(ARCH_BASE)$(ARCH_SUB)-none-eabi -mcpu=$(CPU) -ffreestanding -Wno-override-module -fpic -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
+# --sysroot=$(DEVKITPRO)/devkitA64/aarch64-none-elf
+# --target=$(ARCH_BASE)$(ARCH_SUB)-none-eabi
+
+main: $(SWIFTAPP_NAME).o
+	@echo =\> Making
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 clean:
 	@echo =\> Cleaning
