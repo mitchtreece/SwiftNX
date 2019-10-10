@@ -57,7 +57,17 @@ INCLUDES		:= include
 
 SWIFT_SDK		:= /Library/Developer/SDKs/arm64-5.1.0-RELEASE.sdk
 SWIFT_TOOLCHAIN := /Library/Developer/Toolchains/arm64-5.1.0-RELEASE.xctoolchain
+SWIFT_TOOLS		:= $(SWIFT_TOOLCHAIN)/usr/bin
+SWIFT_CLANG		:= $(SWIFT_TOOLS)/clang
 SWIFTC 			:= $(SWIFT_TOOLCHAIN)/usr/bin/swiftc
+
+#---------------------------------------------------------------------------------
+# devkitpro tools
+#---------------------------------------------------------------------------------
+
+GCC				:= $(DEVKITPRO)/devkitA64/bin/aarch64-none-elf-gcc
+GPP				:= $(DEVKITPRO)/devkitA64/bin/aarch64-none-elf-g++
+ELF2NRO			:= $(DEVKITPRO)/tools/bin/elf2nro
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -78,7 +88,9 @@ CXXFLAGS 		:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS 		:= -g $(ARCH)
 LDFLAGS		 	 = -v -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) \
-				   -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyrelo
+				   -Wl,-Map,$(notdir $*.map)
+
+				   # -Wl,-z,nocopyrelo
 
 LIBS 			:= -lnx
 
@@ -113,6 +125,8 @@ SWIFTAPP_NAME	:= applet
 SWIFTAPP_SRC	:= $(DEPSDIR)/$(SWIFTAPP_NAME).swift
 SWIFTAPP_LL		:= $(DEPSDIR)/$(SWIFTAPP_NAME).ll
 SWIFTAPP_O		:= $(DEPSDIR)/$(SWIFTAPP_NAME).o
+SWIFTAPP_ELF	:= $(DEPSDIR)/$(SWIFTAPP_NAME).elf
+SWIFTAPP_NRO	:= $(DEPSDIR)/$(SWIFTAPP_NAME).nro
 CFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
 CPPFILES		:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
 SFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
@@ -201,22 +215,33 @@ $(SWIFTAPP_NAME).swift: $(BUILD)
 	@echo =\> Creating $(SWIFTAPP_NAME).swift
 	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
 
-$(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
+$(SWIFTAPP_NAME).ll : $(SWIFTAPP_NAME).swift
+	@echo =\> Creating $(SWIFTAPP_NAME).ll
+
+	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
+	-emit-ir -parse-as-library \
+	$(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
+
+$(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).ll
 	@echo =\> Creating $(SWIFTAPP_NAME).o
-	$(SWIFTC) -v -sdk $(SWIFT_SDK) -swift-version $(SWIFT_VERSION) -target aarch64-unknown-linux \
-	-emit-object -parse-as-library -static-stdlib \
-	$(SWIFTAPP_SRC) -o $(DEPSDIR)/$(SWIFTAPP_NAME).o
 
-# swiftc -v -swift-version $(SWIFT_VERSION) -emit-ir -parse-as-library -I$(TOPDIR)/modules $(SWIFTAPP_SRC) -o $(DEPSDIR)/$(SWIFTAPP_NAME).o
-# -target aarch64-unknown-linux
+	$(SWIFT_CLANG) -target aarch64-none-eabi -ffreestanding -Wno-override-module \
+	-c $(SWIFTAPP_LL) -o $(SWIFTAPP_O)
 
-# /usr/local/opt/llvm/bin/clang -v --target=$(ARCH_BASE)$(ARCH_SUB)-none-eabi -mcpu=$(CPU) -ffreestanding -Wno-override-module -fpic -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)
-# --sysroot=$(DEVKITPRO)/devkitA64/aarch64-none-elf
-# --target=$(ARCH_BASE)$(ARCH_SUB)-none-eabi
+$(SWIFTAPP_NAME).elf : $(SWIFTAPP_NAME).o
+	@echo =\> Creating $(SWIFTAPP_NAME).elf
 
-main: $(SWIFTAPP_NAME).o
-	@echo =\> Making
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) \
+	$(SWIFTAPP_O) -o $(SWIFTAPP_ELF)
+
+	@$(NM) -CSn $(SWIFTAPP_ELF) > $(notdir $*.lst)
+
+$(SWIFTAPP_NAME).nro : $(SWIFTAPP_NAME).elf
+	@echo =\> Creating $(SWIFTAPP_NAME).nro
+	$(ELF2NRO) $(SWIFTAPP_ELF) $(SWIFTAPP_NRO)
+
+main: $(SWIFTAPP_NAME).nro
+	@echo =\> Done
 
 clean:
 	@echo =\> Cleaning
@@ -225,6 +250,20 @@ ifeq ($(strip $(APP_JSON)),)
 else
 	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
 endif
+
+# $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
+# 	@echo =\> Creating $(SWIFTAPP_NAME).o
+#
+# 	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
+# 	-I$(SWIFT_SDK)/usr/include -I$(SWIFT_SDK)/usr/include/aarch64-linux-gnu \
+# 	-L$(SWIFT_TOOLCHAIN)/usr/lib/swift/linux -L$(SWIFT_TOOLCHAIN)/usr/lib/swift_static/linux \
+# 	-lswiftCore -lswiftGlibc -lswiftSwiftOnoneSupport -lswiftDispatch -lBlocksRuntime -lFoundation \
+# 	-use-ld=gold -emit-object -static-stdlib -parse-as-library \
+# 	$(SWIFTAPP_SRC) -o $(SWIFTAPP_O)
+#
+# main: $(SWIFTAPP_NAME).o
+# 	@echo =\> Building
+# 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------
 
@@ -276,3 +315,10 @@ endif
 # clang target: aarch64-arm-none-eabi (arch-vendor-os-env)
 # --target=$(ARCH_BASE)-none-eabi
 # -fpic = generate position independent code. (compiles, but causes memory issues when running)
+
+# clang:
+# $(SWIFT_TOOLS)/clang -v --target=aarch64-unknown-linux -mcpu=$(CPU) \
+# -fuse-ld=gold -ffreestanding -Wno-override-module -fpic \
+# -L$(SWIFT_TOOLCHAIN)/usr/lib/swift_static/linux \
+# -lswiftCore -lswiftGlibc -lswiftSwiftOnoneSupport -lswiftDispatch -lBlocksRuntime -lFoundation \
+# -o $(SWIFTAPP_O) -c $(SWIFTAPP_LL)

@@ -12,6 +12,7 @@
 int swift_main();
 
 // TESTING:
+// void ss27_allocateUninitializedArrayySayxG_BptBwlFyp_Tg5() {};
 // void sSS21_builtinStringLiteral17utf8CodeUnitCount7isASCIISSBp_BwBi1_tcfC() {};
 // void sSSN() {};
 // void ss5print_9separator10terminatoryypd_S2StF() {};
