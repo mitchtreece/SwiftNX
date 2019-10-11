@@ -49,6 +49,7 @@ BUILD			:= build
 SOURCES			:= src
 DATA			:= data
 INCLUDES		:= include
+DEPSDIR			:= $(TOPDIR)/$(BUILD)
 # ROMFS			 := romfs
 
 #---------------------------------------------------------------------------------
@@ -87,17 +88,17 @@ ARCH_BASE 		:= armv8
 ARCH_SUB		:= a
 ARCH 			:= -march=$(ARCH_BASE)-$(ARCH_SUB)+crc+crypto -mtune=$(CPU) -mtp=soft -fPIE
 
-CFLAGS 			:= -v -g -Wall -O2 -ffunction-sections \
+CFLAGS 			:= -g -Wall -O2 -ffunction-sections \
 				   $(ARCH) $(DEFINES)
-
 				   # `sdl2-config --cflags` `freetype-config --cflags` \ #
 
 CFLAGS 			+= $(INCLUDE) -D__SWITCH__
 CXXFLAGS 		:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS 		:= -g $(ARCH)
-LDFLAGS		 	 = -v -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) \
-				   -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyrelo
+LDFLAGS		 	 = -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) \
+				   -Wl,-Map,$(notdir $*.map)
+				   # -Wl,-z,nocopyrelo
 
 LIBS 			:= -lnx
 
@@ -128,12 +129,12 @@ export VPATH		:= $(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
 export SOURCE_DIR 	:= $(TOPDIR)/$(SOURCES)
 export BUILD_DIR 	:= $(TOPDIR)/$(BUILD)
 
-SWIFTAPP_NAME	:= app
-CFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
-CPPFILES		:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
-SFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
-SWIFTFILES		:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.swift)))
-BINFILES		:= $(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
+SWIFTAPP_NAME		:= app
+CFILES				:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
+CPPFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
+SFILES				:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
+SWIFTFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.swift)))
+BINFILES			:= $(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -214,10 +215,6 @@ $(BUILD):
 	@echo → Creating $(BUILD) directory
 	@[ -d $@ ] || mkdir -p $@
 
-# $(SWIFTAPP_NAME).swift: $(BUILD)
-# 	@echo → Creating $(SWIFTAPP_NAME).swift
-# 	@python $(TOPDIR)/include.py -i $(SOURCE_DIR)/main.swift -o $(BUILD_DIR)/$(SWIFTAPP_NAME).swift
-
 main: $(BUILD)
 	@echo → Making $(OFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(TOPDIR)/Makefile
@@ -229,48 +226,6 @@ ifeq ($(strip $(APP_JSON)),)
 else
 	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
 endif
-
-# $(SWIFTAPP_NAME).ll : $(SWIFTAPP_NAME).swift
-# 	@echo → Creating $(SWIFTAPP_NAME).ll
-#
-# 	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
-# 	-emit-ir -parse-as-library \
-# 	$(BUILD_DIR)/$(SWIFTAPP_NAME).swift -o $(BUILD_DIR)/$(SWIFTAPP_NAME).ll
-#
-# $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).ll
-# 	@echo → Creating $(SWIFTAPP_NAME).o
-#
-# 	$(SWIFT_CLANG) -target aarch64-none-eabi -ffreestanding -Wno-override-module \
-# 	-c $(BUILD_DIR)/$(SWIFTAPP_NAME).ll -o $(BUILD_DIR)/$(SWIFTAPP_NAME).o
-
-# $(SWIFTAPP_NAME).elf : $(SWIFTAPP_NAME).o
-# 	@echo → Creating $(SWIFTAPP_NAME).elf
-#
-# 	$(DKP_BIN)/$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) \
-# 	$(BUILD_DIR)/$(SWIFTAPP_NAME).o -o $(BUILD_DIR)/$(SWIFTAPP_NAME).elf
-#
-# 	@$(NM) -CSn $(BUILD_DIR)/$(SWIFTAPP_NAME).elf > $(notdir $*.lst)
-#
-# $(SWIFTAPP_NAME).nro : $(SWIFTAPP_NAME).elf
-# 	@echo → Creating $(SWIFTAPP_NAME).nro
-# 	$(ELF2NRO) $(BUILD_DIR)/$(SWIFTAPP_NAME).elf $(BUILD_DIR)/$(SWIFTAPP_NAME).nro
-#
-# main: $(SWIFTAPP_NAME).nro
-# 	@echo → Done
-#
-# $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
-# 	@echo =\> Creating $(SWIFTAPP_NAME).o
-#
-# 	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
-# 	-I$(SWIFT_SDK)/usr/include -I$(SWIFT_SDK)/usr/include/aarch64-linux-gnu \
-# 	-L$(SWIFT_TOOLCHAIN)/usr/lib/swift/linux -L$(SWIFT_TOOLCHAIN)/usr/lib/swift_static/linux \
-# 	-lswiftCore -lswiftGlibc -lswiftSwiftOnoneSupport -lswiftDispatch -lBlocksRuntime -lFoundation \
-# 	-use-ld=gold -emit-object -static-stdlib -parse-as-library \
-# 	$(SWIFTAPP_SRC) -o $(SWIFTAPP_O)
-#
-# main: $(SWIFTAPP_NAME).o
-# 	@echo =\> Building
-# 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------
 
@@ -304,14 +259,14 @@ $(OUTPUT).elf : $(OFILES)
 $(OFILES_SRC) : $(HFILES_BIN)
 
 %.o : %.swift
-	@echo → Swift -- $@
+	@echo → Swift → IR → O
 
 	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
-	-emit-ir -parse-as-library \
+	-emit-ir -parse-as-library -static-stdlib \
 	-I$(TOPDIR)/modules \
 	$< -o ${@:.o=}.ll
 
-	$(SWIFT_CLANG) -target aarch64-none-eabi -ffreestanding -Wno-override-module \
+	$(SWIFT_CLANG) -target aarch64-none-eabi -ffreestanding -fpic -Wno-override-module \
 	-c ${@:.o=}.ll -o $@
 
 %.bin.o	%_bin.h : %.bin
