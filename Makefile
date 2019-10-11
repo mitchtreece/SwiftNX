@@ -87,7 +87,7 @@ ARCH_BASE 		:= armv8
 ARCH_SUB		:= a
 ARCH 			:= -march=$(ARCH_BASE)-$(ARCH_SUB)+crc+crypto -mtune=$(CPU) -mtp=soft -fPIE
 
-CFLAGS 			:= -g -Wall -O2 -ffunction-sections \
+CFLAGS 			:= -v -g -Wall -O2 -ffunction-sections \
 				   $(ARCH) $(DEFINES)
 
 				   # `sdl2-config --cflags` `freetype-config --cflags` \ #
@@ -214,12 +214,12 @@ $(BUILD):
 	@echo → Creating $(BUILD) directory
 	@[ -d $@ ] || mkdir -p $@
 
-$(SWIFTAPP_NAME).swift: $(BUILD)
-	@echo → Creating $(SWIFTAPP_NAME).swift
-	@python $(TOPDIR)/include.py -i $(SOURCE_DIR)/main.swift -o $(BUILD_DIR)/$(SWIFTAPP_NAME).swift
+# $(SWIFTAPP_NAME).swift: $(BUILD)
+# 	@echo → Creating $(SWIFTAPP_NAME).swift
+# 	@python $(TOPDIR)/include.py -i $(SOURCE_DIR)/main.swift -o $(BUILD_DIR)/$(SWIFTAPP_NAME).swift
 
-main: $(SWIFTAPP_NAME).swift
-	@echo → Building: $(OFILES)
+main: $(BUILD)
+	@echo → Making $(OFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(TOPDIR)/Makefile
 
 clean:
@@ -304,7 +304,7 @@ $(OUTPUT).elf : $(OFILES)
 $(OFILES_SRC) : $(HFILES_BIN)
 
 %.o : %.swift
-	@echo → O-\>Swift: $@
+	@echo → Swift -- $@
 
 	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
 	-emit-ir -parse-as-library \
