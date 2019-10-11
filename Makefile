@@ -39,8 +39,8 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 
 APP_TITLE 		:= SwiftNX
-APP_AUTHOR 		:= mitchtreece
-APP_VERSION 	:= 1.0.0
+APP_AUTHOR		:= mitchtreece
+APP_VERSION		:= 1.0.0
 
 #---------------------------------------------------------------------------------
 
@@ -52,22 +52,31 @@ INCLUDES		:= include
 # ROMFS			 := romfs
 
 #---------------------------------------------------------------------------------
+# dev environment
+#---------------------------------------------------------------------------------
+
+DEVELOPER		:= /Library/Developer
+
+#---------------------------------------------------------------------------------
 # swift environment
 #---------------------------------------------------------------------------------
 
-SWIFT_SDK		:= /Library/Developer/SDKs/arm64-5.1.0-RELEASE.sdk
-SWIFT_TOOLCHAIN := /Library/Developer/Toolchains/arm64-5.1.0-RELEASE.xctoolchain
-SWIFT_TOOLS		:= $(SWIFT_TOOLCHAIN)/usr/bin
-SWIFT_CLANG		:= $(SWIFT_TOOLS)/clang
-SWIFTC 			:= $(SWIFT_TOOLCHAIN)/usr/bin/swiftc
+SWIFT_VERSION				:= 5
+SWIFT_TOOLCHAIN_VERSION 	:= arm64-5.1.0-RELEASE
+SWIFT_TOOLCHAIN 			:= $(DEVELOPER)/Toolchains/$(SWIFT_TOOLCHAIN_VERSION).xctoolchain
+SWIFT_SDK					:= $(DEVELOPER)/SDKs/$(SWIFT_TOOLCHAIN_VERSION).sdk
+SWIFT_TOOLS					:= $(SWIFT_TOOLCHAIN)/usr/bin
+SWIFT_CLANG					:= $(SWIFT_TOOLS)/clang
+SWIFTC 						:= $(SWIFT_TOOLS)/swiftc
 
 #---------------------------------------------------------------------------------
 # devkitpro tools
 #---------------------------------------------------------------------------------
 
-GCC				:= $(DEVKITPRO)/devkitA64/bin/aarch64-none-elf-gcc
-GPP				:= $(DEVKITPRO)/devkitA64/bin/aarch64-none-elf-g++
-ELF2NRO			:= $(DEVKITPRO)/tools/bin/elf2nro
+DKP_BIN			:= $(DEVKITPRO)/devkitA64/bin
+DKP_GCC			:= $(DKP_BIN)/aarch64-none-elf-gcc
+DKP_GPP			:= $(DKP_BIN)/aarch64-none-elf-g++
+DKP_ELF2NRO		:= $(DEVKITPRO)/tools/bin/elf2nro
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -88,9 +97,7 @@ CXXFLAGS 		:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS 		:= -g $(ARCH)
 LDFLAGS		 	 = -v -specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) \
-				   -Wl,-Map,$(notdir $*.map)
-
-				   # -Wl,-z,nocopyrelo
+				   -Wl,-Map,$(notdir $*.map) -Wl,-z,nocopyrelo
 
 LIBS 			:= -lnx
 
@@ -113,23 +120,19 @@ LIBDIRS			:= $(PORTLIBS) $(LIBNX)
 ifneq ($(BUILD), $(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
-export OUTPUT 	:= $(CURDIR)/$(TARGET)
-export TOPDIR	:= $(CURDIR)
-export VPATH	:= $(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
-				   $(foreach dir, $(DATA), $(CURDIR)/$(dir))
+export OUTPUT 		:= $(CURDIR)/$(TARGET)
+export TOPDIR		:= $(CURDIR)
+export VPATH		:= $(foreach dir, $(SOURCES), $(CURDIR)/$(dir)) \
+				   	   $(foreach dir, $(DATA), $(CURDIR)/$(dir))
 
-export DEPSDIR 	:= $(CURDIR)/$(BUILD)
+export SOURCE_DIR 	:= $(TOPDIR)/$(SOURCES)
+export BUILD_DIR 	:= $(TOPDIR)/$(BUILD)
 
-SWIFT_VERSION	:= 5
-SWIFTAPP_NAME	:= applet
-SWIFTAPP_SRC	:= $(DEPSDIR)/$(SWIFTAPP_NAME).swift
-SWIFTAPP_LL		:= $(DEPSDIR)/$(SWIFTAPP_NAME).ll
-SWIFTAPP_O		:= $(DEPSDIR)/$(SWIFTAPP_NAME).o
-SWIFTAPP_ELF	:= $(DEPSDIR)/$(SWIFTAPP_NAME).elf
-SWIFTAPP_NRO	:= $(DEPSDIR)/$(SWIFTAPP_NAME).nro
+SWIFTAPP_NAME	:= app
 CFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.c)))
 CPPFILES		:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.cpp)))
 SFILES			:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.s)))
+SWIFTFILES		:= $(foreach dir, $(SOURCES), $(notdir $(wildcard $(dir)/*.swift)))
 BINFILES		:= $(foreach dir, $(DATA), $(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
@@ -147,12 +150,12 @@ endif
 #---------------------------------------------------------------------------------
 
 export OFILES_BIN 		:= $(addsuffix .o, $(BINFILES))
-export OFILES_SRC		:= $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTAPP_SRC:.swift=.o)
+export OFILES_SRC		:= $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o) $(SWIFTFILES:.swift=.o)
 export OFILES 			:= $(OFILES_BIN) $(OFILES_SRC)
 export HFILES_BIN		:= $(addsuffix .h, $(subst .,_,$(BINFILES)))
 export INCLUDE			:= $(foreach dir, $(INCLUDES), -I$(CURDIR)/$(dir)) \
 						   $(foreach dir, $(LIBDIRS), -I$(dir)/include) \
-						   -I$(CURDIR)/$(BUILD)
+						   -I$(BUILD_DIR)
 
 export LIBPATHS			:= $(foreach dir, $(LIBDIRS), -L$(dir)/lib)
 export BUILD_EXEFS_SRC 	:= $(TOPDIR)/$(EXEFS_SRC)
@@ -188,7 +191,7 @@ ifeq ($(strip $(NO_ICON)),)
 endif
 
 ifeq ($(strip $(NO_NACP)),)
-	export NROFLAGS += --nacp=$(CURDIR)/$(TARGET).nacp
+	export NROFLAGS += --nacp=$(TOPDIR)/$(TARGET).nacp
 endif
 
 ifneq ($(APP_TITLEID),)
@@ -196,7 +199,7 @@ ifneq ($(APP_TITLEID),)
 endif
 
 ifneq ($(ROMFS),)
-	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)
+	export NROFLAGS += --romfsdir=$(TOPDIR)/$(ROMFS)
 endif
 
 .PHONY: $(BUILD) clean all
@@ -208,49 +211,53 @@ endif
 all: main
 
 $(BUILD):
-	@echo =\> Creating $(BUILD) directory
+	@echo → Creating $(BUILD) directory
 	@[ -d $@ ] || mkdir -p $@
 
 $(SWIFTAPP_NAME).swift: $(BUILD)
-	@echo =\> Creating $(SWIFTAPP_NAME).swift
-	@python $(TOPDIR)/include.py -i $(TOPDIR)/src/main.swift -o $(SWIFTAPP_SRC)
+	@echo → Creating $(SWIFTAPP_NAME).swift
+	@python $(TOPDIR)/include.py -i $(SOURCE_DIR)/main.swift -o $(BUILD_DIR)/$(SWIFTAPP_NAME).swift
 
-$(SWIFTAPP_NAME).ll : $(SWIFTAPP_NAME).swift
-	@echo =\> Creating $(SWIFTAPP_NAME).ll
-
-	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
-	-emit-ir -parse-as-library \
-	$(SWIFTAPP_SRC) -o $(SWIFTAPP_LL)
-
-$(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).ll
-	@echo =\> Creating $(SWIFTAPP_NAME).o
-
-	$(SWIFT_CLANG) -target aarch64-none-eabi -ffreestanding -Wno-override-module \
-	-c $(SWIFTAPP_LL) -o $(SWIFTAPP_O)
-
-$(SWIFTAPP_NAME).elf : $(SWIFTAPP_NAME).o
-	@echo =\> Creating $(SWIFTAPP_NAME).elf
-
-	$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) \
-	$(SWIFTAPP_O) -o $(SWIFTAPP_ELF)
-
-	@$(NM) -CSn $(SWIFTAPP_ELF) > $(notdir $*.lst)
-
-$(SWIFTAPP_NAME).nro : $(SWIFTAPP_NAME).elf
-	@echo =\> Creating $(SWIFTAPP_NAME).nro
-	$(ELF2NRO) $(SWIFTAPP_ELF) $(SWIFTAPP_NRO)
-
-main: $(SWIFTAPP_NAME).nro
-	@echo =\> Done
+main: $(SWIFTAPP_NAME).swift
+	@echo → Building: $(OFILES)
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(TOPDIR)/Makefile
 
 clean:
-	@echo =\> Cleaning
+	@echo → Cleaning
 ifeq ($(strip $(APP_JSON)),)
 	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 else
 	@rm -fr $(BUILD) $(TARGET).nsp $(TARGET).nso $(TARGET).npdm $(TARGET).elf
 endif
 
+# $(SWIFTAPP_NAME).ll : $(SWIFTAPP_NAME).swift
+# 	@echo → Creating $(SWIFTAPP_NAME).ll
+#
+# 	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
+# 	-emit-ir -parse-as-library \
+# 	$(BUILD_DIR)/$(SWIFTAPP_NAME).swift -o $(BUILD_DIR)/$(SWIFTAPP_NAME).ll
+#
+# $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).ll
+# 	@echo → Creating $(SWIFTAPP_NAME).o
+#
+# 	$(SWIFT_CLANG) -target aarch64-none-eabi -ffreestanding -Wno-override-module \
+# 	-c $(BUILD_DIR)/$(SWIFTAPP_NAME).ll -o $(BUILD_DIR)/$(SWIFTAPP_NAME).o
+
+# $(SWIFTAPP_NAME).elf : $(SWIFTAPP_NAME).o
+# 	@echo → Creating $(SWIFTAPP_NAME).elf
+#
+# 	$(DKP_BIN)/$(LD) $(LDFLAGS) $(OFILES) $(LIBPATHS) $(LIBS) \
+# 	$(BUILD_DIR)/$(SWIFTAPP_NAME).o -o $(BUILD_DIR)/$(SWIFTAPP_NAME).elf
+#
+# 	@$(NM) -CSn $(BUILD_DIR)/$(SWIFTAPP_NAME).elf > $(notdir $*.lst)
+#
+# $(SWIFTAPP_NAME).nro : $(SWIFTAPP_NAME).elf
+# 	@echo → Creating $(SWIFTAPP_NAME).nro
+# 	$(ELF2NRO) $(BUILD_DIR)/$(SWIFTAPP_NAME).elf $(BUILD_DIR)/$(SWIFTAPP_NAME).nro
+#
+# main: $(SWIFTAPP_NAME).nro
+# 	@echo → Done
+#
 # $(SWIFTAPP_NAME).o : $(SWIFTAPP_NAME).swift
 # 	@echo =\> Creating $(SWIFTAPP_NAME).o
 #
@@ -277,31 +284,37 @@ DEPENDS := $(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 
 ifeq ($(strip $(APP_JSON)),)
-
-all	:	$(OUTPUT).nro
+all	: $(OUTPUT).nro
 
 ifeq ($(strip $(NO_NACP)),)
-$(OUTPUT).nro	:	$(OUTPUT).elf $(OUTPUT).nacp
+$(OUTPUT).nro : $(OUTPUT).elf $(OUTPUT).nacp
 else
-$(OUTPUT).nro	:	$(OUTPUT).elf
+$(OUTPUT).nro :	$(OUTPUT).elf
 endif
 
 else
 
-all	:	$(OUTPUT).nsp
-$(OUTPUT).nsp	:	$(OUTPUT).nso $(OUTPUT).npdm
-$(OUTPUT).nso	:	$(OUTPUT).elf
+all	: $(OUTPUT).nsp
+$(OUTPUT).nsp :	$(OUTPUT).nso $(OUTPUT).npdm
+$(OUTPUT).nso :	$(OUTPUT).elf
 
 endif
 
-$(OUTPUT).elf	:	$(OFILES)
-$(OFILES_SRC)	: $(HFILES_BIN)
+$(OUTPUT).elf : $(OFILES)
+$(OFILES_SRC) : $(HFILES_BIN)
 
-#---------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
-#---------------------------------------------------------------------------------
+%.o : %.swift
+	@echo → O-\>Swift: $@
 
-%.bin.o	%_bin.h :	%.bin
+	$(SWIFTC) -v -swift-version $(SWIFT_VERSION) -sdk $(SWIFT_SDK) -tools-directory $(SWIFT_TOOLS) -target aarch64-unknown-linux \
+	-emit-ir -parse-as-library \
+	-I$(TOPDIR)/modules \
+	$< -o ${@:.o=}.ll
+
+	$(SWIFT_CLANG) -target aarch64-none-eabi -ffreestanding -Wno-override-module \
+	-c ${@:.o=}.ll -o $@
+
+%.bin.o	%_bin.h : %.bin
 	@echo $(notdir $<)
 	@$(bin2o)
 

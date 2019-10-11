@@ -4,7 +4,7 @@
  * @Date:   05-24-2018
  * @Email:  mitchtreece@me.com
  * @Project: SwiftNX
- * @Filename: _main.c
+ * @Filename: main.c
  * @Last modified by:   mitchtreece
  * @Last modified time: 05-28-2018
  */
